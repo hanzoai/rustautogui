@@ -1,3 +1,5 @@
+<p align="center"><img src=".github/hero.svg" alt="rustautogui" width="880"></p>
+
 # RustAutoGUI
 
 RustAutoGUI crate, made after Al Sweigarts library PyAutoGUI for python.
