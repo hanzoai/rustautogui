@@ -1,0 +1,40 @@
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+  pull_request:
+  merge_group:
+
+name: Continuous integration
+
+jobs:
+  ci:
+    name: CI
+    runs-on: hanzo-build-linux-amd64
+    needs: [check]
+    if: always()
+    steps:
+      - name: Done
+        run: jq --exit-status 'all(.result == "success")' <<< '${{ toJson(needs) }}'
+
+  check:
+    strategy:
+      matrix:
+        feature: [lite, full, opencl, dev]
+    runs-on: hanzo-build-linux-amd64
+    steps:
+      - uses: actions/checkout@v4
+
+      # build.rs links X11 and Xtst for linux targets, and the opencl feature
+      # links an ICD loader, so the headers must be present before cargo runs.
+      - name: Install X11 and OpenCL development packages
+        run: |
+          sudo apt update
+          sudo apt install -y libx11-dev libxtst-dev ocl-icd-opencl-dev
+
+      - name: Cache Dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          key: v2.1-${{ matrix.feature }}
+
+      - run: cargo build --release --examples --no-default-features --features ${{ matrix.feature }}

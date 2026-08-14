@@ -1,0 +1,30 @@
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+  pull_request:
+  merge_group:
+
+name: Clippy
+
+jobs:
+  clippy-check:
+    name: Clippy
+    runs-on: hanzo-build-linux-amd64
+    steps:
+      - uses: actions/checkout@v4
+
+      # clippy compiles the crate, so it needs the same X11 headers build.rs
+      # links against.
+      - name: Install X11 development packages
+        run: |
+          sudo apt update
+          sudo apt install -y libx11-dev libxtst-dev
+
+      - name: Cache Dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          key: v2.1-clippy
+
+      - run: rustup component add clippy
+      - run: cargo clippy
